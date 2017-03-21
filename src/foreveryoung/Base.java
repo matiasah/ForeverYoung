@@ -1,8 +1,11 @@
 package foreveryoung;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Scanner;
 
 public class Base {
+    
+    public static Scanner lector = new Scanner(System.in);
     
     private static class DigitoInvalidoEnBase extends Exception { }
     
@@ -11,7 +14,7 @@ public class Base {
         int res = 0;
         int multiplo = 1;
         
-        // Inicializar una variable con la division, la multiplicación es más rápida
+        // Inicializar una variable con la division, la multiplicacion es mas rapida
         double baseInversa = 1.0 / base;
         
         while ( numero > 0 ) {
@@ -19,10 +22,10 @@ public class Base {
             // El resto de una division siempre es mayor o igual que cero
             int resto = Math.floorMod(numero, base);
             
-            // Verificar que el resto se encuentre en un rango válido
+            // Verificar que el resto se encuentre en un rango valido
             if ( resto > 9 ) {
                 
-                // Digito inválido, el resto debe estar en rango [0, 9]
+                // Digito invalido, el resto debe estar en rango [0, 9]
                 throw new DigitoInvalidoEnBase();
                 
             }
@@ -47,7 +50,7 @@ public class Base {
         int multiplo = (int) Math.pow(10, exponente);
         int multiploBase = (int) Math.pow(base, exponente);
         
-        // Iniciar una variable con la división, la multiplicación es más rápida
+        // Iniciar una variable con la division, la multiplicacion es mas rapida
         double baseInversa = 1.0 / base;
         
         while ( numero > 0 ) {
@@ -72,15 +75,15 @@ public class Base {
         // Par base-valor con valor menor
         SimpleEntry<Integer, Integer> par = null;
         
-        // Base 1 y 0 son inválidas, comenzar desde base 2        
+        // Base 1 y 0 son invalidas, comenzar desde base 2        
         for (int base = 2; base <= y; base++) {
             
             try {
                 
-                // Si se reciben datos válidos desde 'deBase10', el algoritmo procede normalmente
+                // Si se reciben datos validos desde 'deBase10', el algoritmo procede normalmente
                 int valor = deBase10(y, base);
                 
-                // Verificar que el valor de 'y' en esta base sea mayor que el límite inferior
+                // Verificar que el valor de 'y' en esta base sea mayor que el limite inferior
                 if ( valor >= lowerBound ) {
 
                     // Si no hay par actual, o el valor en esta base es menor que el valor en el par actual, establecer un nuevo par
@@ -94,7 +97,7 @@ public class Base {
                 
             } catch ( DigitoInvalidoEnBase e ) {
                 
-                // Si el algoritmo recibe un dato inválido, proceder con la siguiente base
+                // Si el algoritmo recibe un dato invalido, proceder con la siguiente base
                 continue;
                 
             }
@@ -109,6 +112,15 @@ public class Base {
         }
         
         return -1;
+        
+    }
+    
+    public static void main(String[] args) {
+        
+        String Line = lector.nextLine();
+        String split[] = Line.split(" ");
+        
+        System.out.println( buscarBase( Integer.parseInt(split[0]), Integer.parseInt(split[1])) );
         
     }
     
