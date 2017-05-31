@@ -85,7 +85,7 @@ public class Main {
 
             } catch (ExcepcionBase e) {
                 // Error al hacer cambio de base, apareció un digito mayor que 9
-                // Reducir el intervalo hacia la derecha
+                // Reducir el intervalo hacia la izquierda
                 error  =   true;
                 medio  =   medio - 1;
 
