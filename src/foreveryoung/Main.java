@@ -1,138 +1,91 @@
 package foreveryoung;
 
-import java.util.AbstractMap.SimpleEntry;
-import java.util.Scanner;
+import java.io.File;
+import java.io.RandomAccessFile;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class Main {
 
-    private static class ExcepcionBase extends Exception {
-
-        private long numero;
-
-        public ExcepcionBase(long numero) {
-
-            this.numero = numero;
-
-        }
-
-        public long getNumero() {
-
-            return this.numero;
-
-        }
-
-    }
-
-    public static Scanner lector = new Scanner(System.in);
-
-    public static long de10(long numero, long base) throws ExcepcionBase {
-
-        long potencia = 1;
-        long transformado = 0;
-        boolean excepcion = false;
-
-        while (numero > 0) {
-            long digito = numero % base;
-
-            if (digito > 9) {
-
-                excepcion = true;
-                digito = 9;
-
-            }
-
-            transformado += digito * potencia;
-            potencia *= 10;
-            numero = (numero - digito) / base;
-        }
-
-        if (excepcion) {
-            
-            throw new ExcepcionBase(transformado);
-
-        }
-
-        return transformado;
-
-    }
-
-    public static Long busquedaBinaria(long numero, long limiteInferior, long izquierda, long derecha) {
-        
-        if (limiteInferior <= 10) {
-
-            return numero;
-
-        }
-
-        long suma = izquierda + derecha;
-        long medio = suma / 2;
-
-        if (izquierda == medio) {
-            // Si el rango de busqueda es en un intervalo de rango 1, comparar el valor único dentro del intervalo
-            try {
-                // Verificar que sea mayor que el límite inferior
-                if (de10(numero, izquierda) >= limiteInferior) {
-
-                    // Es un posible resultado
-                    return izquierda;
-
-                }
-
-            } catch (ExcepcionBase e) {
-                
-                // Si el número contiene un dígito mayor que 9, no se puede retornar
-            }
-            
-            return null;
-            
-        }
-
-        // Busqueda binaria a traves del límite inferior
-        long transformado;
-
-        try {
-
-            transformado = de10(numero, medio);
-
-        } catch (ExcepcionBase e) {
-            // Si hay un dígito mayor que 9, se considera como 9.
-            transformado = e.getNumero();
-            
-        }
-        
-        if (transformado >= limiteInferior) {
-
-            // Es mayor que el límite inferior, buscar hacia la derecha
-            Long busqueda = busquedaBinaria(numero, limiteInferior, medio, derecha);
-
-            if (busqueda == null) {
-                
-                // No se ha encontrado nada, buscar hacia la izquierda
-                return busquedaBinaria(numero, limiteInferior, izquierda, medio + (suma % 2));
-
-            }
-
-            return busqueda;
-
-        } else {
-
-            // Es menor que el límite inferior, buscar hacia la izquierda (aqui no se puede considerar buscar hacia la derecha)
-            return busquedaBinaria(numero, limiteInferior, izquierda, medio + (suma % 2));
-
-        }
-
-    }
-
     public static void main(String[] args) throws Exception {
+        
+        int tests = 0;
+        int testsExitosos = 0;
+        
+        File carpeta = new File("./tests");
+        File listaArchivos[] = carpeta.listFiles();
 
-        String Line = lector.nextLine();
-        String split[] = Line.split(" ");
+        for ( File archivo : listaArchivos ) {
+            
+            String nombre = archivo.getName();
+            
+            if ( archivo.isFile() && nombre.substring( nombre.length() - 3, nombre.length()).equals(".in") ) {
+                
+                System.out.println("TEST: " + nombre);
+                
+                tests = tests + 1;
+                
+                RandomAccessFile lectorTest = new RandomAccessFile( archivo.getAbsolutePath(), "r");
+                RandomAccessFile lectorRes = new RandomAccessFile( archivo.getAbsolutePath().substring( 0 , archivo.getAbsolutePath().length() - 3) + ".ans", "r");
+                
+                String linea = lectorTest.readLine();
+                String split[] = linea.split(" ");
+                
+                long resultado = Long.parseLong(lectorRes.readLine());
+                
+                lectorTest.close();
+                lectorRes.close();
+                
+                System.out.println(linea);
 
-        // Se recibe un número 'y' y un límite inferior
-        long y = (long) Long.parseLong(split[0]);
-        long limiteInferior = (long) Long.parseLong(split[1]);
+                // Se recibe un número 'y' y un límite inferior
+                long y = (long) Long.parseLong(split[0]);
+                long limiteInferior = (long) Long.parseLong(split[1]);
 
-        System.out.println(busquedaBinaria(y, limiteInferior, 10, y));
+                TestBusqueda busqueda = new TestBusqueda(y, limiteInferior);
+                
+                ExecutorService ejecutor = Executors.newSingleThreadExecutor();
+                Future<Long> future = ejecutor.submit(busqueda);
+
+                try {
+                    
+                    long resultadoAlgoritmo = future.get(2, TimeUnit.SECONDS);
+
+                    if ( resultadoAlgoritmo == resultado ) {
+                        
+                        testsExitosos = testsExitosos + 1;
+                        
+                        System.out.println( resultadoAlgoritmo + " = " + resultado + " (ACEPTADO)");
+                        
+                    } else {
+                        
+                        System.out.println( resultadoAlgoritmo + " != " + resultado + " (RECHAZADO)");
+                        
+                    }
+
+                } catch ( TimeoutException e ) {
+
+                    future.cancel(true);
+                    System.out.println("Tiempo de ejecucion superado (RECHAZADO).");
+
+                } catch ( Exception e ) {
+                    
+                    System.out.println("ERROR " + e + " != " + resultado + " (RECHAZADO)");
+                    
+                }
+                
+                ejecutor.shutdownNow();
+                System.out.println("-------------------------------------------------");
+                
+            }
+            
+        }
+        
+        System.out.println("Proceso completado, " + testsExitosos + " de " + tests + " exitosos.");
+        System.exit(0);
 
     }
 
